@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 
 // Container for the entire page
 const Container = styled.div`
@@ -35,14 +36,6 @@ const Form = styled.form`
 `;
 
 // Styled input, textarea, and dropdown components
-const Input = styled.input`
-  padding: 12px;
-  margin-bottom: 15px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-`;
-
 const TextArea = styled.textarea`
   padding: 12px;
   margin-bottom: 15px;
@@ -117,6 +110,8 @@ const MaintenanceRequests = () => {
     description: '',
   });
 
+  const navigate = useNavigate();
+
   const maintenanceTypes = ['Plumbing', 'Electrical', 'HVAC', 'General'];
   const maintenanceSubtypes = {
     Plumbing: ['Leak', 'Clog', 'Installation'],
@@ -124,6 +119,7 @@ const MaintenanceRequests = () => {
     HVAC: ['Heating', 'Cooling', 'Ventilation'],
     General: ['Cleaning', 'Painting', 'Other'],
   };
+  const seriousnessOfMaintenance = ['High', 'Casual'];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -142,6 +138,10 @@ const MaintenanceRequests = () => {
       seriousness: '',
       description: '',
     });
+
+    // Show success message and navigate to dashboard
+    alert('Request submitted successfully!');
+    setTimeout(() => navigate('/dashboard'), 2000); // Adjust delay as needed
   };
 
   return (
@@ -177,14 +177,20 @@ const MaintenanceRequests = () => {
                 </option>
               ))}
           </Dropdown>
-          <Input
-            type="text"
+          <Dropdown
             name="seriousness"
-            placeholder="Seriousness of Maintenance"
             value={formData.seriousness}
             onChange={handleChange}
             required
-          />
+          >
+            <option value="">Seriousness of Maintenance</option>
+            {seriousnessOfMaintenance.map((seriousness, index) => (
+              <option key={index} value={seriousness}>
+                {seriousness}
+              </option>
+            ))}
+          </Dropdown>
+          
           <TextArea
             name="description"
             placeholder="Description"
