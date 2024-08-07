@@ -42,10 +42,15 @@ const ThumbnailImage = styled.img`
   height: 70px;
   border-radius: 8px;
   cursor: pointer;
+  border: 2px solid transparent;
 
   &:hover {
     opacity: 0.8;
   }
+
+  ${({ isSelected }) => isSelected && `
+    border-color: #28a745;
+  `}
 `;
 
 const DetailsSection = styled.div`
@@ -146,6 +151,32 @@ const SubmitButton = styled.button`
   }
 `;
 
+const ConfirmationPopup = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  z-index: 1000;
+`;
+
+const ConfirmationButton = styled.button`
+  padding: 10px;
+  font-size: 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #218838;
+  }
+`;
+
 const properties = [
   {
     id: 1,
@@ -155,10 +186,11 @@ const properties = [
     price: 7000,
     image: 'https://via.placeholder.com/800x400',
     thumbnails: [
-      'https://via.placeholder.com/100x70',
-      'https://via.placeholder.com/100x70',
-      'https://via.placeholder.com/100x70',
+      'https://via.placeholder.com/700x400',
+      'https://via.placeholder.com/800x400',
+      'https://via.placeholder.com/600x400',
     ],
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
   },
   // Add other properties here
 ];
@@ -167,6 +199,7 @@ const PropertyDetail = () => {
   const { id } = useParams();
   const property = properties.find(property => property.id === parseInt(id));
   const [showModal, setShowModal] = useState(false);
+  const [showScheduling, setShowScheduling] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -174,7 +207,14 @@ const PropertyDetail = () => {
     currentResidence: '',
     employmentInfo: '',
   });
+  const [schedulingData, setSchedulingData] = useState({
+    date: '',
+    time: '',
+  });
   const [formErrors, setFormErrors] = useState({});
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(property.image);
+  const [selectedThumbnail, setSelectedThumbnail] = useState(property.image);
 
   if (!property) {
     return <Container>Property not found</Container>;
@@ -186,6 +226,19 @@ const PropertyDetail = () => {
       ...formData,
       [name]: value,
     });
+  };
+
+  const handleSchedulingChange = (e) => {
+    const { name, value } = e.target;
+    setSchedulingData({
+      ...schedulingData,
+      [name]: value,
+    });
+  };
+
+  const handleThumbnailClick = (thumb) => {
+    setSelectedImage(thumb);
+    setSelectedThumbnail(thumb);
   };
 
   const validateForm = () => {
@@ -208,7 +261,20 @@ const PropertyDetail = () => {
       // Form submission logic
       console.log('Form submitted successfully:', formData);
       setShowModal(false);
+      setShowScheduling(true);
     }
+  };
+
+  const handleSchedulingSubmit = (e) => {
+    e.preventDefault();
+    // Scheduling logic here
+    console.log('Scheduling details:', schedulingData);
+    setShowScheduling(false);
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmationClose = () => {
+    setShowConfirmation(false);
   };
 
   return (
@@ -216,10 +282,16 @@ const PropertyDetail = () => {
       <Breadcrumb>Dashboard &gt; Property &gt; Details</Breadcrumb>
       <MainContent>
         <ImageSection>
-          <MainImage src={property.image} alt={property.address} />
+          <MainImage src={selectedImage} alt={property.address} />
           <Thumbnails>
             {property.thumbnails.map((thumb, index) => (
-              <ThumbnailImage key={index} src={thumb} alt={`Thumbnail ${index + 1}`} />
+              <ThumbnailImage
+                key={index}
+                src={thumb}
+                alt={`Thumbnail ${index + 1}`}
+                onClick={() => handleThumbnailClick(thumb)}
+                isSelected={selectedThumbnail === thumb}
+              />
             ))}
           </Thumbnails>
         </ImageSection>
@@ -286,10 +358,41 @@ const PropertyDetail = () => {
               />
               {formErrors.employmentInfo && <p style={{ color: 'red' }}>{formErrors.employmentInfo}</p>}
               <SubmitButton type="submit">Pay and Proceed</SubmitButton>
-              <SubmitButton type="button">Schedule a visit with our agent</SubmitButton>
+              <SubmitButton type="button" onClick={() => setShowScheduling(true)}>Schedule a visit with our agent</SubmitButton>
             </Form>
           </ModalContent>
         </ModalOverlay>
+      )}
+      {showScheduling && (
+        <ModalOverlay onClick={() => setShowScheduling(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <CloseButton onClick={() => setShowScheduling(false)}>&times;</CloseButton>
+            <h2>Schedule a Visit</h2>
+            <Form onSubmit={handleSchedulingSubmit}>
+              <Input
+                type="date"
+                name="date"
+                value={schedulingData.date}
+                onChange={handleSchedulingChange}
+                required
+              />
+              <Input
+                type="time"
+                name="time"
+                value={schedulingData.time}
+                onChange={handleSchedulingChange}
+                required
+              />
+              <SubmitButton type="submit">Submit</SubmitButton>
+            </Form>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+      {showConfirmation && (
+        <ConfirmationPopup>
+          <h3>Visit Scheduled Successfully!</h3>
+          <ConfirmationButton onClick={handleConfirmationClose}>OK</ConfirmationButton>
+        </ConfirmationPopup>
       )}
     </Container>
   );
